@@ -13,7 +13,7 @@
 
 <p align="center">
   定期检查 DigitalPlat 托管的 <code>.us.kg</code> / <code>.xx.kg</code> 域名到期时间，<br>
-  通过 Telegram 通知提醒在 120 天免费续期窗口内操作。
+  到期前 120 天内自动免费续期，并通过 Telegram 通知列出全部域名状态。
 </p>
 
 ---
@@ -21,12 +21,22 @@
 ## 📋 功能
 
 - ✅ 通过 DigitalPlat API v1 获取域名列表（cloudscraper 绕过 Cloudflare 验证）
-- ✅ 兼容多种 API 响应格式（`{success,data}` / 直接数组 / `{data}`）
+- ✅ 兼容多种 API 响应格式（`{success,data}` / 直接数组 / `{data}` / `{domains}`）
 - ✅ 检查每个域名的到期时间，自动识别永久到期
-- ✅ 标记 120 天窗口内需续期的域名
-- ✅ 打印终端表格概览
-- ✅ 通过 Telegram Bot 发送通知（支持长消息分片）
+- ✅ 进入 120 天续期窗口（含已过期）的域名**自动免费续期**
+- ✅ 续期后重新读取权威状态，通知里显示真实到期日
+- ✅ Telegram 通知：列出**全部域名** + 到期时间 + 剩余天数 + 续期结果
 - ✅ 支持 GitHub Actions 定时运行
+
+---
+
+## 🔄 自动续期
+
+- **触发条件**：域名剩余 ≤ 120 天（`RENEWAL_WINDOW_DAYS`）即进入窗口，自动续期
+- **已过期域名也会续期**（剩余天数为负）
+- **续期请求**：`POST /domains/{domain}/renew`，body `{"renewal_type":"free","years":1}`
+- **不做自动重试**：续期失败会记录并通知，等待下次运行再判断（避免双扣款）
+- **DRY_RUN=1**：只检查、不实际续期（安全预览）
 
 ---
 
@@ -117,7 +127,9 @@ on:
 | 端点 | 方法 | 说明 |
 |------|------|------|
 | `domain-api.digitalplat.org/api/v1/domains` | `GET` | 获取所有域名列表 |
+| `domain-api.digitalplat.org/api/v1/domains/{domain}` | `GET` | 获取单个域名详情 |
+| `domain-api.digitalplat.org/api/v1/domains/{domain}/renew` | `POST` | 续期，body `{"renewal_type":"free","years":1}` |
 
-**认证：** `Authorization: Bearer *** `dp_test_xxx`（测试）
+**认证：** `Authorization: Bearer <API_KEY>`
 
-> API 未暴露 renewal 端点，续期需在 Dashboard 手动操作。
+> 端点以官方 API 文档为准（`dashboard.digitalplat.org/dashboard/api/docs`），脚本支持通过 `DIGITALPLAT_API_BASE` 覆盖 base URL。

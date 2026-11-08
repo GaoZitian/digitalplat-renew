@@ -32,5 +32,8 @@ jobs:
           DIGITALPLAT_API_KEY: ${{ secrets.DIGITALPLAT_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # 可选: 续期窗口天数 (默认 120)，1=DRY_RUN 只检查不续期
+          RENEWAL_WINDOW_DAYS: ${{ vars.RENEWAL_WINDOW_DAYS || '120' }}
+          DRY_RUN: ${{ vars.DRY_RUN || '0' }}
         run: |
           ./renew-digitalplat-subdomains.sh
